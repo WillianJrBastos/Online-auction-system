@@ -3,22 +3,25 @@ import threading
 
 from rich.console import Console
 
-address = input("Digite o endereço do servidor: ")
-port = int(input("Digite a porta do servidor: "))
-nome = input("Digite seu nome de usuário: ")
+# address = input("Digite o endereço do servidor: ")
+address = 'localhost'
+# port = int(input("Digite a porta do servidor: "))
+port = 12345
+# nome = input("Digite seu nome de usuário: ")
+nome = "Will 2"
 address_server = (address, port)
 
-cliente1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-cliente1.connect(address_server)
+cliente2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+cliente2.connect(address_server)
 
-cliente1.send(nome.encode())
+cliente2.send(nome.encode())
 
 console = Console()
 
 def receber():
     while True:
         try:
-            mensagem = cliente1.recv(1024).decode()
+            mensagem = cliente2.recv(1024).decode()
 
             if not mensagem:
                 break
@@ -27,7 +30,7 @@ def receber():
                 console.print(
                     "\n[bold red]Leilão encerrado! Não é mais possível enviar lances.[/bold red]"
                 )
-                cliente1.close()
+                cliente2.close()
                 break
 
             console.print(
@@ -48,9 +51,9 @@ while True:
         if lance.lower() == "sair":
             break
 
-        cliente1.send(lance.encode())
+        cliente2.send(lance.encode())
 
     except:
         break
 
-cliente1.close()
+cliente2.close()

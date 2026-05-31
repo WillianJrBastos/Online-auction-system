@@ -10,16 +10,11 @@ from rich.layout import Layout
 from rich.align import Align
 from rich.live import Live
 
-# address = input("Digite o endereço do servidor: ")
-address = 'localhost'
-# port = int(input("Digite a porta do servidor: "))
-port = 12345
-# nomeItem = input("Digite o nome do item: ")
-nomeItem = "Moto"
-# valorInicial = float(input("Digite o valor inicial do lance do item: R$"))
-valorInicial = 10000.0
-# tempo = int(input("Digite o tempo que ra durar o leilão (em segundos): "))
-tempo = 30
+address = input("Digite o endereço do servidor: ")
+port = int(input("Digite a porta do servidor: "))
+nomeItem = input("Digite o nome do item: ")
+valorInicial = float(input("Digite o valor inicial do lance do item: R$"))
+tempo = int(input("Digite o tempo que ra durar o leilão (em segundos): "))
 tempoRestante = tempo
 clientes = []
 vencedor = "?"
@@ -87,14 +82,15 @@ def cronometro():
 
         if tempoRestante % 15 == 0 and tempoRestante > 0:
             broadcast(f"Restam {tempoRestante} segundos.")
-
-
         if tempoRestante in [3, 2, 1]:
             broadcast(f"Leilão termina em {tempoRestante} segundo(s)!")
 
     leilaoAtivo = False
-    mensagem = (f"\nLeilão encerrado!\n"f"Vencedor: {vencedor}\n"f"Valor final: R${valorInicial:.2f}\n")
+
+    mensagem = (f"\n\nLeilão encerrado!\n"f"Vencedor: {vencedor}\n"f"Valor final: R${valorInicial:.2f}\n")
+
     broadcast(mensagem)
+    broadcast("LEILÃO ENCERRADO")
 
     console.print(Panel(mensagem, title="Finalizado!"))
 
@@ -113,36 +109,48 @@ def fazerLance(connection, endereco):
 
         console.print(f"'{nome}' conectado")
 
-        connection.send((f"Bem-vindo ao leilão, {nome}!\n"f"Item: {nomeItem} | "f"Lance atual: R${valorInicial:.2f}").encode())
+        connection.send(
+            (f"Bem-vindo ao leilão, {nome}!\n"f"Item: {nomeItem} | "f"Lance atual: R${valorInicial:.2f}").encode())
 
         while True:
 
-            lance = float(connection.recv(1024).decode())
+            dados = connection.recv(1024).decode()
+
+            if not dados:
+                break
 
             with lock:
+                if tempoRestante <= 0:
+                    connection.send("LEILAO_ENCERRADO".encode())
+                    break
 
+            lance = float(dados)
+
+            with lock:
                 if lance > valorInicial:
                     valorInicial = lance
                     vencedor = nome
 
                     mensagem = (f"Novo lance: "f"R${valorInicial:.2f} "f"por {vencedor}")
 
-                    console.print(Panel(mensagem,title="Novo Lance!"))
+                    console.print(Panel(mensagem, title="Novo Lance!"))
+
                     broadcast(mensagem)
 
                     if not leilaoAtivo:
                         leilaoAtivo = True
 
-                        threading.Thread(target=cronometro,daemon=True).start()
+                        threading.Thread(target=cronometro, daemon=True).start()
 
                 else:
-                    connection.send("Lance rejeitado!".encode())
+                    connection.send(
+                        "Lance rejeitado!".encode())
 
     except:
-
         console.print(f"[red]'{nome}' desconectado.[/red]")
 
     finally:
+
         with lock:
 
             if connection in clientes:
