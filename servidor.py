@@ -14,7 +14,7 @@ address = input("Digite o endereço do servidor: ")
 port = int(input("Digite a porta do servidor: "))
 nomeItem = input("Digite o nome do item: ")
 valorInicial = float(input("Digite o valor inicial do lance do item: R$"))
-tempo = int(input("Digite o tempo que ra durar o leilão (em segundos): "))
+tempo = int(input("Digite o tempo que ira durar o leilão (em segundos): "))
 tempoRestante = tempo
 clientes = []
 vencedor = "?"
@@ -90,7 +90,7 @@ def cronometro():
     mensagem = (f"\n\nLeilão encerrado!\n"f"Vencedor: {vencedor}\n"f"Valor final: R${valorInicial:.2f}\n")
 
     broadcast(mensagem)
-    broadcast("LEILÃO ENCERRADO")
+    broadcast("LEILAO_ENCERRADO")
 
     console.print(Panel(mensagem, title="Finalizado!"))
 
